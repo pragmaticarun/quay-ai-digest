@@ -18,7 +18,7 @@ export default function SourcesPage() {
       <main id="content">
         <h1 className="text-2xl font-medium">Source allowlist</h1>
         <p className="mt-2 max-w-3xl">
-          Quay fetches only the adapters marked enabled, and only after a local editor asks. A failed or unclear source stays off. Fetched rows are drafts until review. This page does not claim the log is complete.
+          Quay fetches only the adapters marked enabled, and only after a local editor asks. Fetched rows are drafts until review. Permission for each enabled source stays with the operator. This page does not claim the log is complete.
         </p>
         <div className="mt-6 grid gap-4">
           {adapters.map((adapter) => {

@@ -21,7 +21,7 @@ An ingested candidate moves through history events `fetched`, `normalized`, `ded
 Identity:
 
 - Canonical URL: `http` or `https` only, no credentials, no fragment, tracking parameters removed, host lowercased by the URL parser. arXiv hosts are rewritten to `https://arxiv.org/abs/{id}`.
-- Stable id: `arxiv:{id}{version}`, `github-release:{numeric id}`, or `manual:{hash of canonical URL}`.
+- Stable id: `arxiv:{id}{version}`, `github-release:{numeric id}`, `openalex:{work id}`, `hf-model:{model id}`, `{rss-adapter}:{canonical URL}`, or `manual:{hash of canonical URL}`.
 - The same stable id or the same canonical URL updates one row. A canonical URL that already belongs to a different stable id is a conflict and is not inserted.
 - The same arXiv stable id returned by more than one category is one row. Topics are unioned, including when a later response lists a narrower set.
 - A new arXiv version or a new GitHub tag is a new row. Rows that share a base id are linked. They are not collapsed.

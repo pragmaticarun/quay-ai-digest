@@ -57,14 +57,18 @@ test("filters report an empty match", async ({ page }) => {
   await expect(page.getByText(FIXTURE_TITLE)).toHaveCount(0);
 });
 
-test("sources page records disabled adapters", async ({ page }) => {
+test("sources page lists every registered adapter as enabled", async ({ page }) => {
   await page.goto("/sources");
   await expect(page.getByRole("heading", { name: "Source allowlist" })).toBeVisible();
-  await expect(page.getByText("arXiv API (cs.AI, cs.CL, cs.CV, cs.LG)")).toBeVisible();
-  await expect(page.getByText("Hugging Face blog RSS", { exact: true })).toBeVisible();
-  await expect(page.getByText("OpenAI news RSS", { exact: true })).toBeVisible();
-  await expect(page.getByText("Google DeepMind blog RSS")).toBeVisible();
-  await expect(page.getByText(/prior written consent/i)).toBeVisible();
+  await expect(page.getByText("arXiv API (cs.AI, cs.CL, cs.CV, cs.LG)").first()).toBeVisible();
+  await expect(page.getByText("OpenAlex works API").first()).toBeVisible();
+  await expect(page.getByText("Hugging Face Hub model API").first()).toBeVisible();
+  await expect(page.getByText("Hugging Face blog RSS").first()).toBeVisible();
+  await expect(page.getByText("OpenAI news RSS").first()).toBeVisible();
+  await expect(page.getByText("Google DeepMind blog RSS").first()).toBeVisible();
+  await expect(page.getByText(/operator accepted responsibility/i).first()).toBeVisible();
+  await expect(page.getByText(/Why it is off/i)).toHaveCount(0);
+  await expect(page.getByText(/AlphaSignal/i)).toHaveCount(0);
 });
 
 test("editor requires a token and mutations are not public", async ({ page, request }) => {

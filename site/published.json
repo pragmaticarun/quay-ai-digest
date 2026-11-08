@@ -1,3 +1,438 @@
 {
-  "records": []
+  "records": [
+    {
+      "id": "d5c73dfc-d308-433c-8453-60a13f2c2dcb",
+      "type": "tool",
+      "title": "ggml-org/llama.cpp b12202",
+      "topics": [
+        "llama.cpp",
+        "inference"
+      ],
+      "publisher": "GitHub · ggml-org/llama.cpp",
+      "authors": [
+        "github-actions[bot] (GitHub login on the release object)"
+      ],
+      "canonicalUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b12202",
+      "stableId": "github-release:438115637",
+      "versionLabel": "b12202",
+      "publishedAt": "2026-11-08T08:11:09.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T13:05:14.304Z",
+      "reviewedAt": "2026-11-08T13:07:37.625Z",
+      "datePrecision": "datetime",
+      "factSummary": "llama.cpp build b12202 adjusts requested arithmetic precision to follow reference implementations: selected projections, vision matrix multiplications and a speech-model convolution request BF16, while specified routing/indexing operations remain F32. The notes also align backend handling and expand BF16 flash-attention test coverage.",
+      "interpretation": "Precision choices are part of model correctness, not just a speed knob. Following the reference computation can require different settings for different operations within the same model.",
+      "engineeringRelevance": "Teams shipping llama.cpp across CPU and GPU backends should regression-test affected model families and backend support rather than assuming identical behavior across quantization and precision settings.",
+      "caveats": "GitHub marks this rolling build as a prerelease. Release-note claims were reviewed but binaries and numerical behavior were not tested; no accuracy or speed improvement is claimed.",
+      "licenseNote": "Identifiers come from the public GitHub Releases API. Release notes and source archives are not copied. Quay is not affiliated with GitHub.",
+      "citations": [
+        {
+          "label": "GitHub release b12202",
+          "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b12202",
+          "role": "primary"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "github-releases",
+      "sourceLabel": "b12202"
+    },
+    {
+      "id": "9b7291ce-6d54-4344-932d-98ba83efb8e2",
+      "type": "repo",
+      "title": "huggingface/transformers v5.22.2",
+      "topics": [
+        "transformers",
+        "releases"
+      ],
+      "publisher": "GitHub · huggingface/transformers",
+      "authors": [
+        "vasqu (GitHub login on the release object)"
+      ],
+      "canonicalUrl": "https://github.com/huggingface/transformers/releases/tag/v5.22.2",
+      "stableId": "github-release:436664122",
+      "versionLabel": "v5.22.2",
+      "publishedAt": "2026-11-06T15:43:27.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T13:05:14.304Z",
+      "reviewedAt": "2026-11-08T13:07:38.152Z",
+      "datePrecision": "datetime",
+      "factSummary": "Transformers 5.22.2 is a focused patch release covering Jinja sandbox hardening and a distributed fix that sets device_id only for NCCL. The official notes identify security and distributed behavior as the reasons for this in-between patch.",
+      "interpretation": "A small patch can still matter for applications that render chat templates or use distributed initialization. Scope the review to those paths rather than assuming a new model-feature release.",
+      "engineeringRelevance": "Review deployments that accept templates or initialize multiple distributed backends, then run representative template and process-group tests before updating pinned environments.",
+      "caveats": "Based on the official patch notes. No CVE scope, exploitability conclusion or proof that all template risks are removed is inferred; the patch was not installed or tested here.",
+      "licenseNote": "Identifiers come from the public GitHub Releases API. Release notes and source archives are not copied. Quay is not affiliated with GitHub.",
+      "citations": [
+        {
+          "label": "GitHub release v5.22.2",
+          "url": "https://github.com/huggingface/transformers/releases/tag/v5.22.2",
+          "role": "primary"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "github-releases",
+      "sourceLabel": "Patch release v5.22.2"
+    },
+    {
+      "id": "b9046c1c-6de2-4e4e-9101-63883428cb54",
+      "type": "repo",
+      "title": "microsoft/onnxruntime v1.31.1",
+      "topics": [
+        "onnxruntime",
+        "releases"
+      ],
+      "publisher": "GitHub · microsoft/onnxruntime",
+      "authors": [
+        "eserscor (GitHub login on the release object)"
+      ],
+      "canonicalUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.1",
+      "stableId": "github-release:424667771",
+      "versionLabel": "v1.31.1",
+      "publishedAt": "2026-10-26T19:29:51.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T13:05:14.304Z",
+      "reviewedAt": "2026-11-08T13:07:38.669Z",
+      "datePrecision": "datetime",
+      "factSummary": "ONNX Runtime 1.31.1 fixes a provider-info namespace mismatch that prevented some builds combining OpenVINO and Python from compiling. Its other highlighted change corrects WASM Debug external-data tests; the maintainers explicitly describe that second change as test-only, not a runtime-behavior change.",
+      "interpretation": "This is a targeted build-maintenance update, not evidence of a general inference-performance gain. The distinction between a production fix and a test-harness adjustment keeps the upgrade rationale precise.",
+      "engineeringRelevance": "Relevant to teams building custom OpenVINO-enabled Python packages. Reproduce the affected build configuration in CI; do not justify a fleet-wide runtime upgrade solely with the WASM test change.",
+      "caveats": "Verified against the exact v1.31.1 tag’s official notes. Release-list order is not chronological across version branches, so this is not described as the newest ONNX Runtime release; no local package build was attempted.",
+      "licenseNote": "Identifiers come from the public GitHub Releases API. Release notes and source archives are not copied. Quay is not affiliated with GitHub.",
+      "citations": [
+        {
+          "label": "GitHub release v1.31.1",
+          "url": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.1",
+          "role": "primary"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "github-releases",
+      "sourceLabel": "ONNX Runtime v1.31.1"
+    },
+    {
+      "id": "647b5146-9dc7-47c5-9a14-66501d150dc8",
+      "type": "repo",
+      "title": "pytorch/pytorch v2.15.0",
+      "topics": [
+        "pytorch",
+        "releases"
+      ],
+      "publisher": "GitHub · pytorch/pytorch",
+      "authors": [
+        "soulitzer (GitHub login on the release object)"
+      ],
+      "canonicalUrl": "https://github.com/pytorch/pytorch/releases/tag/v2.15.0",
+      "stableId": "github-release:426958393",
+      "versionLabel": "v2.15.0",
+      "publishedAt": "2026-10-28T17:09:49.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T13:05:14.304Z",
+      "reviewedAt": "2026-11-08T13:07:36.573Z",
+      "datePrecision": "datetime",
+      "factSummary": "PyTorch 2.15 makes a rewritten NCCL distributed backend the default and adds a hang flight recorder, with documented rollback paths. Its release notes also describe one-sided distributed transports and finer FSDP2 memory and communication controls, alongside backward-incompatible changes.",
+      "interpretation": "The distributed default is operationally more important than a generic upgrade headline: it changes the implementation underneath existing multi-GPU jobs and creates a concrete rollback decision.",
+      "engineeringRelevance": "For distributed training fleets, validate hang diagnostics, collective behavior and checkpoint compatibility in staging, and record the legacy-backend rollback option before rollout.",
+      "caveats": "Changes verified in the project’s official release notes, not tested locally. Performance and platform claims are workload-dependent; this entry is not a blanket upgrade recommendation.",
+      "licenseNote": "Identifiers come from the public GitHub Releases API. Release notes and source archives are not copied. Quay is not affiliated with GitHub.",
+      "citations": [
+        {
+          "label": "GitHub release v2.15.0",
+          "url": "https://github.com/pytorch/pytorch/releases/tag/v2.15.0",
+          "role": "primary"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "github-releases",
+      "sourceLabel": "PyTorch 2.15.0 Release"
+    },
+    {
+      "id": "6b320f61-8736-4ffc-a38d-3a73c6bf2767",
+      "type": "tool",
+      "title": "vllm-project/vllm v0.32.0",
+      "topics": [
+        "inference",
+        "serving"
+      ],
+      "publisher": "GitHub · vllm-project/vllm",
+      "authors": [
+        "khluu (GitHub login on the release object)"
+      ],
+      "canonicalUrl": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0",
+      "stableId": "github-release:416285351",
+      "versionLabel": "v0.32.0",
+      "publishedAt": "2026-10-18T06:50:48.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T13:05:14.304Z",
+      "reviewedAt": "2026-11-08T13:07:37.088Z",
+      "datePrecision": "datetime",
+      "factSummary": "vLLM 0.32 adds generic Hugging Face tool/reasoning parsers that use a checkpoint’s response template, broadens low-precision KV-cache support, and includes serving-startup changes. The release also restricts default CORS origins, drops Python 3.10, and documents several security fixes.",
+      "interpretation": "This combines feature work with migration-sensitive defaults. Serving compatibility and security settings deserve a separate checklist rather than being hidden behind throughput headlines.",
+      "engineeringRelevance": "Check Python and Transformers requirements, browser-origin policies and parser behavior against the exact deployed checkpoints. Benchmark latency and KV-cache memory on your own hardware before enabling new precision modes.",
+      "caveats": "Official release-note review only; no serving or security tests performed here. A newer release-candidate-named tag was present in the fetch; this entry deliberately covers the stable-numbered 0.32 release, not “the latest release.”",
+      "licenseNote": "Identifiers come from the public GitHub Releases API. Release notes and source archives are not copied. Quay is not affiliated with GitHub.",
+      "citations": [
+        {
+          "label": "GitHub release v0.32.0",
+          "url": "https://github.com/vllm-project/vllm/releases/tag/v0.32.0",
+          "role": "primary"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "github-releases",
+      "sourceLabel": "v0.32.0"
+    },
+    {
+      "id": "57b55731-e2fa-4d25-8e72-6b504b83e473",
+      "type": "paper",
+      "title": "MedGraph: Maintaining Patient State with Graph Memory for Long-Term Medical Dialogue",
+      "topics": [
+        "language",
+        "artificial-intelligence"
+      ],
+      "publisher": "arXiv",
+      "authors": [
+        "Donghua Zhang",
+        "Zizheng Wang",
+        "Ze Dong",
+        "Yiding Feng",
+        "Siyu Qian"
+      ],
+      "canonicalUrl": "https://arxiv.org/abs/2611.08433v1",
+      "stableId": "arxiv:2611.08433v1",
+      "versionLabel": "v1",
+      "publishedAt": "2026-11-05T18:27:20.000Z",
+      "updatedAt": "2026-11-05T18:27:20.000Z",
+      "fetchedAt": "2026-11-08T13:05:01.786Z",
+      "reviewedAt": "2026-11-08T13:07:34.885Z",
+      "datePrecision": "datetime",
+      "factSummary": "MedGraph proposes graph memory for medical conversations that span multiple visits. It stores dated facts with the person they concern, links evolving clinical records into chains, and retrieves time-appropriate state together with dialogue evidence and a profile of recorded safety facts.",
+      "interpretation": "The design separates three easily conflated retrieval problems: stale information, facts about the wrong person, and missing safety context. That separation is useful beyond medical chat.",
+      "engineeringRelevance": "Consider temporal validity, subject attribution and evidence retention as explicit memory-system requirements. Any clinical use still needs privacy controls, expert oversight and safety validation.",
+      "caveats": "Preprint claims summarized from the arXiv abstract; not medical advice or evidence of clinical effectiveness. Reported benchmark gains were not independently reproduced and are not asserted here.",
+      "licenseNote": "Descriptive metadata from the arXiv API is used under CC0 1.0. The e-print file is not stored. Quay is not endorsed by arXiv.",
+      "citations": [
+        {
+          "label": "arXiv abstract page",
+          "url": "https://arxiv.org/abs/2611.08433v1",
+          "role": "primary"
+        },
+        {
+          "label": "arXiv PDF (linked, not stored)",
+          "url": "https://arxiv.org/pdf/2611.08433v1",
+          "role": "context"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "arxiv",
+      "sourceLabel": null
+    },
+    {
+      "id": "6640fbdd-65db-40a1-b4f2-e6007bdc74e4",
+      "type": "paper",
+      "title": "Towards interpreting any residual stream direction by scaling activation inversion",
+      "topics": [
+        "machine-learning",
+        "artificial-intelligence"
+      ],
+      "publisher": "arXiv",
+      "authors": [
+        "Celeste De Schamphelaere",
+        "Juan J. Vazquez",
+        "Ari Spiesberger",
+        "Tomáš Gavenčiak",
+        "Gavin Leech",
+        "Euan Ong",
+        "Jiahai Feng"
+      ],
+      "canonicalUrl": "https://arxiv.org/abs/2611.08465v1",
+      "stableId": "arxiv:2611.08465v1",
+      "versionLabel": "v1",
+      "publishedAt": "2026-11-05T18:54:40.000Z",
+      "updatedAt": "2026-11-05T18:54:40.000Z",
+      "fetchedAt": "2026-11-08T13:05:01.786Z",
+      "reviewedAt": "2026-11-08T13:07:35.481Z",
+      "datePrecision": "datetime",
+      "factSummary": "The authors introduce Maximally-Activating Example Metamodels, which turn a direction in a subject model’s residual stream into text intended to activate that direction. Training uses a label-free reinforcement-learning objective based on cosine similarity, and generated examples can be checked with a forward pass through the subject model.",
+      "interpretation": "Generated activation examples offer a way to look beyond the coverage of a fixed text corpus. The forward-pass check grounds activation strength, but does not by itself establish a complete semantic explanation.",
+      "engineeringRelevance": "Relevant to interpretability tooling and steering-vector analysis. Validate generated examples against held-out directions and causal interventions before treating them as reliable explanations.",
+      "caveats": "Summarized from the authors’ arXiv abstract. No model, backdoor-recovery result or activation benchmark was run locally; generalization remains an empirical claim.",
+      "licenseNote": "Descriptive metadata from the arXiv API is used under CC0 1.0. The e-print file is not stored. Quay is not endorsed by arXiv.",
+      "citations": [
+        {
+          "label": "arXiv abstract page",
+          "url": "https://arxiv.org/abs/2611.08465v1",
+          "role": "primary"
+        },
+        {
+          "label": "arXiv PDF (linked, not stored)",
+          "url": "https://arxiv.org/pdf/2611.08465v1",
+          "role": "context"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "arxiv",
+      "sourceLabel": null
+    },
+    {
+      "id": "5f34a1c9-a060-4144-a8eb-9b235ea981c9",
+      "type": "paper",
+      "title": "Understanding AI from the Inside: The State of Mechanistic Interpretability for AI Safety",
+      "topics": [
+        "language",
+        "artificial-intelligence",
+        "machine-learning"
+      ],
+      "publisher": "arXiv",
+      "authors": [
+        "Fazl Barez",
+        "Tung-Yu Wu",
+        "Hunar Batra",
+        "Gabriele Dominici",
+        "Florent Draye",
+        "Yanai Elazar",
+        "Damiano Fornasiere",
+        "Antía García",
+        "Abir Harrasse",
+        "Riley Harris",
+        "Sara Hooker",
+        "Michael Lan",
+        "Belinda Z. Li",
+        "Aaron Maiwald",
+        "Narmeen Fatimah Oozeer",
+        "Naomi Saphra",
+        "Or David Shafran",
+        "Adi Simhi",
+        "Robert Trager",
+        "Shriyash Kaustubh Upadhyay",
+        "Ziyu Yao",
+        "Yu Zhao",
+        "Shay B. Cohen",
+        "Mor Geva",
+        "Yoshua Bengio",
+        "Stella Biderman",
+        "Hassan Sajjad"
+      ],
+      "canonicalUrl": "https://arxiv.org/abs/2611.08438v1",
+      "stableId": "arxiv:2611.08438v1",
+      "versionLabel": "v1",
+      "publishedAt": "2026-11-05T18:30:54.000Z",
+      "updatedAt": "2026-11-05T18:30:54.000Z",
+      "fetchedAt": "2026-11-08T13:05:01.786Z",
+      "reviewedAt": "2026-11-08T13:07:34.349Z",
+      "datePrecision": "datetime",
+      "factSummary": "This survey connects mechanistic interpretability methods to AI-safety uses, including steering, monitoring and knowledge editing. It covers feature extraction, circuit discovery, causal verification and training-data attribution, and proposes a framework for assessing interpretability claims alongside behavioral evidence.",
+      "interpretation": "The important distinction is between explaining an internal pattern and demonstrating that an intervention actually improves safety. A plausible circuit story is not itself a deployment guarantee.",
+      "engineeringRelevance": "A reading map for teams choosing interpretability experiments: pair internal analyses with causal tests and behavioral evaluations, and document where an explanation stops supporting a claim.",
+      "caveats": "Author-described survey scope from the arXiv abstract. Linked notebooks and safety outcomes were not executed or independently validated.",
+      "licenseNote": "Descriptive metadata from the arXiv API is used under CC0 1.0. The e-print file is not stored. Quay is not endorsed by arXiv.",
+      "citations": [
+        {
+          "label": "arXiv abstract page",
+          "url": "https://arxiv.org/abs/2611.08438v1",
+          "role": "primary"
+        },
+        {
+          "label": "arXiv PDF (linked, not stored)",
+          "url": "https://arxiv.org/pdf/2611.08438v1",
+          "role": "context"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "arxiv",
+      "sourceLabel": null
+    },
+    {
+      "id": "65a1eafa-a169-43df-a709-6a1881b9b1b2",
+      "type": "paper",
+      "title": "Unpacking the Compute Efficiency of Strong-to-Weak OPD against GRPO",
+      "topics": [
+        "machine-learning",
+        "language"
+      ],
+      "publisher": "arXiv",
+      "authors": [
+        "Zeyu Leo Liu",
+        "Yang Li",
+        "Bo Pang",
+        "Emre Can Acikgoz",
+        "Xuan-Phi Nguyen",
+        "Anurag Koul",
+        "Srijan Bansal",
+        "Erik Nijkamp",
+        "Shafiq Joty",
+        "Semih Yavuz"
+      ],
+      "canonicalUrl": "https://arxiv.org/abs/2611.08453v1",
+      "stableId": "arxiv:2611.08453v1",
+      "versionLabel": "v1",
+      "publishedAt": "2026-11-05T18:47:05.000Z",
+      "updatedAt": "2026-11-05T18:47:05.000Z",
+      "fetchedAt": "2026-11-08T13:05:01.786Z",
+      "reviewedAt": "2026-11-08T13:07:36.000Z",
+      "datePrecision": "datetime",
+      "factSummary": "This study compares on-policy distillation with GRPO using held-out accuracy versus training compute. The authors report that external-teacher distillation often loses at matched settings, while distilling a student’s own GRPO checkpoint can be efficient for consolidation; they explicitly distinguish distillation-stage cost from the cost of training the teacher.",
+      "interpretation": "The useful lesson is an accounting boundary: a cheap distillation stage is not necessarily a cheaper end-to-end training pipeline. Teacher selection and the need to combine capabilities change the comparison.",
+      "engineeringRelevance": "When evaluating distillation, include specialist training, rollout and consolidation costs, and compare at matched accuracy. Track response length as well as FLOPs to avoid misleading efficiency conclusions.",
+      "caveats": "Author-reported findings from an arXiv abstract, not an independent benchmark. Numerical speedup and compute-saving claims are intentionally omitted; results may depend on tasks and teacher/student choices.",
+      "licenseNote": "Descriptive metadata from the arXiv API is used under CC0 1.0. The e-print file is not stored. Quay is not endorsed by arXiv.",
+      "citations": [
+        {
+          "label": "arXiv abstract page",
+          "url": "https://arxiv.org/abs/2611.08453v1",
+          "role": "primary"
+        },
+        {
+          "label": "arXiv PDF (linked, not stored)",
+          "url": "https://arxiv.org/pdf/2611.08453v1",
+          "role": "context"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "arxiv",
+      "sourceLabel": null
+    },
+    {
+      "id": "c26d88d0-4a62-4bf3-b90b-44b0f9cc53fb",
+      "type": "paper",
+      "title": "XStack: A Benchmark for ML Repo Migration",
+      "topics": [
+        "machine-learning",
+        "artificial-intelligence"
+      ],
+      "publisher": "arXiv",
+      "authors": [
+        "Linrong Cai",
+        "Taiming Lu",
+        "Haozhe Chen",
+        "Zhuang Liu"
+      ],
+      "canonicalUrl": "https://arxiv.org/abs/2611.08472v1",
+      "stableId": "arxiv:2611.08472v1",
+      "versionLabel": "v1",
+      "publishedAt": "2026-11-05T18:55:54.000Z",
+      "updatedAt": "2026-11-05T18:55:54.000Z",
+      "fetchedAt": "2026-11-08T13:05:01.786Z",
+      "reviewedAt": "2026-11-08T13:07:33.761Z",
+      "datePrecision": "datetime",
+      "factSummary": "XStack evaluates coding agents on moving complete machine-learning repositories from PyTorch on NVIDIA GPUs to JAX on TPUs. Agents receive a source repository and a clean TPU environment; the benchmark checks the migrated implementation against criteria grounded in the original repository’s published result.",
+      "interpretation": "Cross-framework migration is a stronger systems test than translating isolated functions: the agent must preserve behavior while changing both the software stack and hardware assumptions.",
+      "engineeringRelevance": "Useful when evaluating migration agents or planning a second accelerator backend. Test numerical behavior, training outcomes and environment setup, not just whether converted code executes.",
+      "caveats": "Based on the authors’ arXiv abstract, not an independent reproduction or full-paper audit. No agent ranking or success-rate claim is independently verified.",
+      "licenseNote": "Descriptive metadata from the arXiv API is used under CC0 1.0. The e-print file is not stored. Quay is not endorsed by arXiv.",
+      "citations": [
+        {
+          "label": "arXiv abstract page",
+          "url": "https://arxiv.org/abs/2611.08472v1",
+          "role": "primary"
+        },
+        {
+          "label": "arXiv PDF (linked, not stored)",
+          "url": "https://arxiv.org/pdf/2611.08472v1",
+          "role": "context"
+        }
+      ],
+      "sourceDrift": false,
+      "adapterId": "arxiv",
+      "sourceLabel": null
+    }
+  ]
 }

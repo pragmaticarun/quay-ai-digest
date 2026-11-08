@@ -50,41 +50,55 @@ Polling once a day is not the same as a source that publishes once a day.
 - Quay's behavior: no token is sent or requested. Each run calls at most these repositories, `per_page=5`: `pytorch/pytorch`, `vllm-project/vllm`, `ggml-org/llama.cpp`, `huggingface/transformers`, `microsoft/onnxruntime`. It waits at least 4 seconds between those calls, sends a stored ETag, treats 304 as no change, and stops on 403 or 429 without retrying or calling the remaining repositories. Each repository URL is skipped for 20 hours after success unless `--force` is set. Stored fields are the repository, numeric release id, tag, URL, `published_at`, draft and prerelease flags, the author login when present, and a release label only when `name` is 120 characters or shorter. The release body is not stored. `updated_at` is not used as a publication date.
 - Daily feasibility: five requests sit under 60 per hour. Releases are irregular. Most days the result is unchanged or not-modified.
 
-## Disabled
+## Enabled by operator decision, 8 November 2026
 
-### OpenAlex
+The operator said to enable every previously disabled registered source and accepted responsibility for permission. Quay does not claim those terms were independently verified as a reuse grant. The earlier conflict notes stay here so a later reader can see them. AlphaSignal is still not a source.
 
+None of these adapters publish. They write drafts in the local database. They do not send a credential from the repository, follow redirects, or retry HTTP 401, 402, 403, or 429. Each request URL is skipped for 20 hours after success unless `--force` is set.
+
+### OpenAlex works
+
+- Endpoint: `GET https://api.openalex.org/works?filter=primary_topic.subfield.id:1702,type:article|preprint&sort=publication_date:desc&per_page=5&select=id,display_name,publication_date,doi,updated_date,type,authorships,primary_location`
+- Subfield 1702 is Artificial Intelligence. The select list omits abstracts.
+- Works API: https://docs.openalex.org/api-entities/works
 - Terms PDF, revised 2 October 2026: https://openalex.org/OpenAlex_termsofservice.pdf
-- Help pages describe CC0 data and a usage-priced API: https://help.openalex.org/api/authentication/ and https://help.openalex.org/access/overview/
-- The terms say unauthorized reproduction or republication of the Data or Database requires Impactstory's prior written consent, and they restrict copying the Data for an unauthorized purpose. That conflicts with the CC0 help pages. The adapter stays off. No API key is requested. A daily job does not call it.
+- Authentication and rate limits: https://help.openalex.org/api/authentication/ and https://help.openalex.org/access/overview/
+- The terms say unauthorized reproduction or republication of the Data or Database needs Impactstory's prior written consent. Help pages also describe CC0 data and a usage-priced API. Quay does not resolve that conflict.
+- Status: enabled. A probe without an API key on 8 November 2026 returned HTTP 200 and named a shared anonymous daily budget. If a later call returns 401, 402, or 403, the run is an error. Set `QUAY_OPENALEX_API_KEY` locally if a key is required. Do not commit it.
+- `publication_date` is stored as the publication date. `updated_date` is stored only as the catalog update time.
 
 ### Hugging Face Hub model API
 
+- Endpoint: `GET https://huggingface.co/api/models?limit=5&sort=lastModified&direction=-1`
 - Terms, effective 15 September 2022: https://huggingface.co/terms-of-service
-- Endpoints: https://huggingface.co/docs/hub/api
+- API: https://huggingface.co/docs/hub/api
 - Rate limits, checked 8 November 2026: https://huggingface.co/docs/hub/rate-limits
-- The terms say a public repository grants other users a license to use that content through Hugging Face services and functionalities. That is not a grant to cache model metadata and republish it on an independent desk or on GitHub Pages. Hugging Face proprietary materials need written permission before they are republished.
-- The rate-limit page describes quotas, including an anonymous API window. A quota is not a reuse license. No token is requested and no model list is fetched. A catalog `lastModified` value is not a publication date and is not stored.
-- Daily feasibility of the endpoint is irrelevant until the terms allow storage. The adapter stays off.
+- The terms say a public repository grants other users a license to use that content through Hugging Face services. They also keep Hugging Face's own materials from republication without written permission. Quay does not treat the anonymous quota as that permission.
+- Status: enabled, no token. `createdAt` and `lastModified` are catalog times. Neither is stored as a publication date. `lastModified` is stored as `updatedAt`. Model cards and weights are not requested.
 
 ### Hugging Face blog RSS
 
-- Feed checked 8 November 2026: https://huggingface.co/blog/feed.xml returned HTTP 200, `content-type: application/rss+xml`. `robots.txt` allows `/`.
+- Endpoint: `GET https://huggingface.co/blog/feed.xml`
+- Checked 8 November 2026: HTTP 200, `content-type: application/rss+xml`.
 - Terms: https://huggingface.co/terms-of-service
-- The blog is Hugging Face's own writing. The proprietary-materials clause requires written permission before it is reproduced or republished. The feed is not that permission. No item was saved. The adapter stays off.
+- Status: enabled. At most five items. Stored fields are title, canonical `/blog/` URL, and `pubDate`. Descriptions are not stored.
 
 ### OpenAI news RSS
 
-- Feed checked 8 November 2026: https://openai.com/news/rss.xml returned HTTP 200, `content-type: text/xml`. `robots.txt` allows `/` except `/microsoft-for-startups/`.
+- Endpoint: `GET https://openai.com/news/rss.xml`
+- Checked 8 November 2026: HTTP 200, `content-type: text/xml`.
 - Terms of Use, effective 1 January 2026: https://openai.com/policies/row-terms-of-use/
-- Those terms cover use of the services and the user's Input and Output. They do not grant a license to copy or republish OpenAI news posts. The copyright-complaints section treats site content as protected. No item was saved. News can still be filed by hand with a primary citation. Quay does not fetch the article body.
+- Those terms cover the services and the user's Input and Output. They do not, on their face, grant republication of news posts. The operator accepted that responsibility anyway.
+- Status: enabled. At most five items. Stored fields are title, an `https://openai.com/` URL, and `pubDate`. The article body is not fetched.
 
 ### Google DeepMind blog RSS
 
-- Feed checked 8 November 2026: https://deepmind.google/blog/rss.xml returned HTTP 200, `content-type: application/xml`. `robots.txt` allows `/`.
+- Endpoint: `GET https://deepmind.google/blog/rss.xml`
+- Checked 8 November 2026: HTTP 200, `content-type: application/xml`.
 - Google Terms of Service: https://policies.google.com/terms
-- Google keeps the intellectual property rights in its services and in Google content. The license in those terms is for content a user gives Google, not a license for this desk to store and republish DeepMind posts. No service-specific blog license was found. No item was saved. A person can still file a news citation by hand.
+- Google keeps rights in Google content. No separate blog licence was found. The operator accepted responsibility for this feed.
+- Status: enabled. At most five items. `pubDate` is the publication time. A different modification time is not read. Descriptions are not stored.
 
 ## Not a source
 
-AlphaSignal is not called. There is no adapter id for it.
+AlphaSignal is not called. There is no adapter id for it. Quay does not scrape it or bypass a paywall.

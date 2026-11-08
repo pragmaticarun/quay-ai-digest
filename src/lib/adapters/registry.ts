@@ -17,7 +17,8 @@ export type AdapterDefinition = {
   successCooldownMs: number;
 };
 
-const DAY = 24 * 60 * 60 * 1000;
+const USER_PERMISSION =
+  "On 8 November 2026 the operator accepted responsibility for permission to ingest this public source. Quay records the official terms link and does not claim that permission was independently verified.";
 
 export const adapters: AdapterDefinition[] = [
   {
@@ -73,105 +74,108 @@ export const adapters: AdapterDefinition[] = [
   {
     id: "openalex-works",
     title: "OpenAlex works API",
-    kind: "Disabled candidate",
-    enabled: false,
-    disabledReason:
-      "OpenAlex Terms of Service revised 2 October 2026 say unauthorized reproduction or republication of the Data or Database needs Impactstory's prior written consent, and they restrict copying the Data for an unauthorized purpose. Help pages describe the dataset as CC0 and the API as usage-priced. Those statements conflict, so this adapter stays off. No API key is requested.",
-    permissionSummary: "Not enabled. Public access alone is not permission, and the terms conflict with the CC0 help pages.",
-    rateLimit: "Not used. Anonymous docs mention a per-second cap and a daily usage budget. Quay does not call the API.",
-    dailyFeasibility: "Not polled. A daily job cannot include this source until the terms conflict is resolved in writing.",
-    stores: "Nothing.",
-    doesNotStore: "OpenAlex records are not fetched.",
+    kind: "Public REST API",
+    enabled: true,
+    disabledReason: null,
+    permissionSummary: `${USER_PERMISSION} Terms PDF revised 2 October 2026: https://openalex.org/OpenAlex_termsofservice.pdf. Help pages also describe CC0 data and a usage-priced API. Those statements were not reconciled by Quay.`,
+    rateLimit:
+      "One HTTPS GET. A probe on 8 November 2026 without an API key returned HTTP 200 and rate-limit headers for a shared anonymous daily budget. HTTP 401, 402, 403, and 429 are not retried. A local QUAY_OPENALEX_API_KEY, if the operator sets one, is sent as Authorization and is not stored in the repository.",
+    dailyFeasibility:
+      "A daily job can run one request for five recent Artificial Intelligence articles or preprints. OpenAlex does not publish a new work on a schedule Quay controls. The same work id updates one draft.",
+    stores:
+      "OpenAlex work id, display name, publication_date, updated_date, type, up to eight author display names, and the venue name when present. publication_date is the publication date. updated_date is only the catalog update time.",
+    doesNotStore: "Abstracts, full text, PDF URLs, landing-page URLs, and author emails.",
     docs: [
+      { label: "OpenAlex works documentation", url: "https://docs.openalex.org/api-entities/works" },
       { label: "OpenAlex terms PDF", url: "https://openalex.org/OpenAlex_termsofservice.pdf" },
       { label: "OpenAlex authentication and rate limits", url: "https://help.openalex.org/api/authentication/" },
     ],
-    requestDescription: "No request is made.",
+    requestDescription:
+      "HTTPS GET https://api.openalex.org/works with filter primary_topic.subfield.id:1702,type:article|preprint, sort publication_date:desc, per_page=5, and a select list that omits abstracts. Host is pinned. Redirects are not followed.",
     minGapMs: 4000,
-    successCooldownMs: DAY,
+    successCooldownMs: 0,
   },
   {
     id: "huggingface-hub",
     title: "Hugging Face Hub model API",
-    kind: "Disabled candidate",
-    enabled: false,
-    disabledReason:
-      "Hugging Face Terms of Service, effective 15 September 2022, say a public repository grants other users a license to use that Content through Hugging Face services and functionalities. That is not a grant to cache model metadata and republish it on an independent desk or on GitHub Pages. Hugging Face also retains its own materials and requires written permission before they are republished. The Hub API and the September 2025 rate-limit table describe quotas, including an anonymous API window, but a quota is not a reuse license. No token is requested and no model list is fetched. A model lastModified value would be a catalog timestamp, not a publication date, and it is not stored.",
-    permissionSummary: "Not enabled. Model records remain manual citations until a clearer reuse grant exists.",
+    kind: "Public REST API",
+    enabled: true,
+    disabledReason: null,
+    permissionSummary: `${USER_PERMISSION} Terms, effective 15 September 2022: https://huggingface.co/terms-of-service. The Hub API documents a public models list. A quota is not treated here as a reuse grant.`,
     rateLimit:
-      "Not used. The rate-limit doc, checked 8 November 2026, says anonymous API requests are a fixed 5-minute window (the September 2025 table lists 500) and that HTTP 429 carries RateLimit headers. Quay does not call the API.",
+      "One HTTPS GET, limit=5, no token. The rate-limit doc, checked 8 November 2026, describes an anonymous API window (the September 2025 table lists 500 requests per 5 minutes). A live response the same day advertised RateLimit-Policy q=500 w=300. HTTP 401, 403, and 429 are not retried.",
     dailyFeasibility:
-      "Not polled. The endpoint exists and a tiny daily list would fit the published quota, but the terms block activation. Daily polling is not the same as a source that may be stored.",
-    stores: "Nothing.",
-    doesNotStore: "Model cards, README bodies, weights, likes, and inference responses.",
+      "A daily job can run one request for the five most recently modified public models. lastModified is a catalog timestamp, not a publication date, and most days the models are not newly published papers.",
+    stores:
+      "Model id, author prefix, pipeline tag, library name, and lastModified as updatedAt. createdAt is mentioned in the mechanical summary and is not stored as publishedAt.",
+    doesNotStore: "Model cards, README bodies, weights, likes, downloads, and inference responses.",
     docs: [
       { label: "Hugging Face terms", url: "https://huggingface.co/terms-of-service" },
       { label: "Hub API endpoints", url: "https://huggingface.co/docs/hub/api" },
       { label: "Hub rate limits", url: "https://huggingface.co/docs/hub/rate-limits" },
     ],
-    requestDescription: "No request is made.",
+    requestDescription:
+      "HTTPS GET https://huggingface.co/api/models?limit=5&sort=lastModified&direction=-1. Host is pinned. full=true is not set. Redirects are not followed.",
     minGapMs: 4000,
-    successCooldownMs: DAY,
+    successCooldownMs: 0,
   },
   {
     id: "huggingface-blog",
     title: "Hugging Face blog RSS",
-    kind: "Disabled candidate",
-    enabled: false,
-    disabledReason:
-      "Checked 8 November 2026. https://huggingface.co/blog/feed.xml returned HTTP 200 and content-type application/rss+xml. robots.txt allows /. The Terms of Service, effective 15 September 2022, say Hugging Face proprietary materials, including the website, may not be reproduced or republished without express written permission. An RSS feed of Hugging Face's own blog is that material. The feed is not a license to store titles, descriptions, or article text. No item was saved.",
-    permissionSummary: "Not enabled. A public feed is not permission to reuse the posts.",
-    rateLimit: "Not used. A HEAD response on 8 November 2026 included a pages rate-limit policy. Quay does not poll the feed.",
-    dailyFeasibility: "Not polled. The blog does not promise a post every day, and the terms block a daily copy.",
-    stores: "Nothing.",
-    doesNotStore: "Feed titles, descriptions, and article bodies.",
+    kind: "Public RSS",
+    enabled: true,
+    disabledReason: null,
+    permissionSummary: `${USER_PERMISSION} Feed: https://huggingface.co/blog/feed.xml. Terms, effective 15 September 2022: https://huggingface.co/terms-of-service.`,
+    rateLimit:
+      "One HTTPS GET. A response on 8 November 2026 was HTTP 200, content-type application/rss+xml, with a pages rate-limit policy of 100 requests per 300 seconds. HTTP 403 and 429 are not retried. At most five items are kept.",
+    dailyFeasibility: "A daily job can run. The blog does not promise a post every day. A repeat inside 20 hours uses the cached URL unless --force is set.",
+    stores: "Title, canonical blog URL, and pubDate as the publication time.",
+    doesNotStore: "Descriptions, article bodies, and any timestamp other than pubDate.",
     docs: [
       { label: "Hugging Face blog RSS", url: "https://huggingface.co/blog/feed.xml" },
       { label: "Hugging Face terms", url: "https://huggingface.co/terms-of-service" },
     ],
-    requestDescription: "No request is made by the ingest command.",
+    requestDescription: "HTTPS GET https://huggingface.co/blog/feed.xml. Host is pinned. Links must stay on https://huggingface.co/blog/. Redirects are not followed.",
     minGapMs: 4000,
-    successCooldownMs: DAY,
+    successCooldownMs: 0,
   },
   {
     id: "openai-news",
     title: "OpenAI news RSS",
-    kind: "Disabled candidate",
-    enabled: false,
-    disabledReason:
-      "Checked 8 November 2026. https://openai.com/news/rss.xml returned HTTP 200 and content-type text/xml. robots.txt allows / except one unrelated path. OpenAI Terms of Use, effective 1 January 2026, cover use of the services and the user's Input and Output. They do not grant a license to copy or republish OpenAI news posts. The copyright-complaints section treats OpenAI site content as protected. A working RSS feed is not that grant. No item was saved.",
-    permissionSummary: "Not enabled. News items can still be added by hand with a primary citation. Quay does not fetch the article body.",
-    rateLimit: "Not used.",
-    dailyFeasibility: "Not polled. OpenAI publishes more than once on some days and not at all on others. That cadence is not permission to store the feed.",
-    stores: "Nothing.",
-    doesNotStore: "Feed titles, descriptions, and article bodies.",
+    kind: "Public RSS",
+    enabled: true,
+    disabledReason: null,
+    permissionSummary: `${USER_PERMISSION} Feed: https://openai.com/news/rss.xml. Terms of Use, effective 1 January 2026: https://openai.com/policies/row-terms-of-use/.`,
+    rateLimit: "One HTTPS GET. A response on 8 November 2026 was HTTP 200, content-type text/xml. HTTP 403 and 429 are not retried. At most five items are kept. No article page is fetched.",
+    dailyFeasibility: "A daily job can run. OpenAI publishes more than once on some days and not at all on others.",
+    stores: "Title, canonical openai.com URL, and pubDate as the publication time.",
+    doesNotStore: "Descriptions, article bodies, and any timestamp other than pubDate.",
     docs: [
       { label: "OpenAI news RSS", url: "https://openai.com/news/rss.xml" },
       { label: "OpenAI Terms of Use", url: "https://openai.com/policies/row-terms-of-use/" },
     ],
-    requestDescription: "No request is made by the ingest command.",
+    requestDescription: "HTTPS GET https://openai.com/news/rss.xml. Host is pinned. Links must stay on https://openai.com/. Redirects are not followed.",
     minGapMs: 4000,
-    successCooldownMs: DAY,
+    successCooldownMs: 0,
   },
   {
     id: "deepmind-blog",
     title: "Google DeepMind blog RSS",
-    kind: "Disabled candidate",
-    enabled: false,
-    disabledReason:
-      "Checked 8 November 2026. https://deepmind.google/blog/rss.xml returned HTTP 200 and content-type application/xml. robots.txt allows /. Google Terms of Service say Google keeps the intellectual property rights in its services and in Google content, and that you may use that content only as the terms and service-specific terms allow. The licence in those terms is for content a user gives Google, not a licence for Quay to store and republish DeepMind posts. No service-specific blog licence was found. A feed pubDate would be the feed's claimed publication time and is not the same thing as a later modification time. Neither was stored.",
-    permissionSummary: "Not enabled. A person can still file a news citation by hand.",
-    rateLimit: "Not used.",
-    dailyFeasibility: "Not polled. DeepMind posts are irregular. The feed responding is not a daily content licence.",
-    stores: "Nothing.",
-    doesNotStore: "Feed titles, descriptions, and article bodies.",
+    kind: "Public RSS",
+    enabled: true,
+    disabledReason: null,
+    permissionSummary: `${USER_PERMISSION} Feed: https://deepmind.google/blog/rss.xml. Google Terms of Service: https://policies.google.com/terms.`,
+    rateLimit: "One HTTPS GET. A response on 8 November 2026 was HTTP 200, content-type application/xml. HTTP 403 and 429 are not retried. At most five items are kept. No article page is fetched.",
+    dailyFeasibility: "A daily job can run. DeepMind posts are irregular. pubDate is the feed's publication time and is not replaced with a modification time.",
+    stores: "Title, canonical deepmind.google blog URL, and pubDate as the publication time.",
+    doesNotStore: "Descriptions, article bodies, and any timestamp other than pubDate.",
     docs: [
       { label: "DeepMind blog RSS", url: "https://deepmind.google/blog/rss.xml" },
       { label: "Google Terms of Service", url: "https://policies.google.com/terms" },
     ],
-    requestDescription: "No request is made by the ingest command.",
+    requestDescription: "HTTPS GET https://deepmind.google/blog/rss.xml. Host is pinned. Links must stay on https://deepmind.google/blog/. Redirects are not followed.",
     minGapMs: 4000,
-    successCooldownMs: DAY,
+    successCooldownMs: 0,
   },
 ];
 

@@ -157,7 +157,7 @@ export function renderSources(base: string, records: PagesRecord[]): string {
     })
     .join("");
   const body = `<h1>Source allowlist</h1>
-    <p>Enabled sources can be fetched on the local desk. They land as drafts. This site only receives records after a person copies a reviewed snapshot. A feed that answers is not permission to store it.</p>
+    <p>Enabled sources can be fetched on the local desk. They land as drafts. This site only receives records after a person copies a reviewed snapshot. Permission to store each source is the operator's responsibility. Quay does not claim those terms were independently verified.</p>
     ${cards}`;
   return page(base, "Sources · Quay", "/sources/", body, { records });
 }

@@ -100,6 +100,30 @@ describe("pages snapshot", () => {
   });
 });
 
+it("publishes the reviewed snapshot of ten records and nothing private", () => {
+  const snapshot = JSON.parse(fs.readFileSync(path.join(process.cwd(), "site", "published.json"), "utf8")) as { records: Record<string, unknown>[] };
+  const records = assertPagesSnapshot(snapshot);
+  expect(records).toHaveLength(10);
+  const ids = new Set(records.map((record) => record.id));
+  const urls = new Set(records.map((record) => record.canonicalUrl));
+  expect(ids.size).toBe(10);
+  expect(urls.size).toBe(10);
+  expect(records.filter((record) => record.type === "paper")).toHaveLength(5);
+  expect(records.every((record) => record.sourceDrift === false)).toBe(true);
+  expect(records.every((record) => record.factSummary.length >= 40)).toBe(true);
+  expect(records.every((record) => record.citations.some((citation) => citation.role === "primary" && citation.url === record.canonicalUrl))).toBe(true);
+  const raw = JSON.stringify(snapshot);
+  for (const forbidden of ["sourceExcerpt", "sourceRequestUrl", "reviewNote", "editorToken", "pendingSource", "\"origin\"", "\"status\":\"draft\"", "fixture"]) {
+    expect(raw.includes(forbidden)).toBe(false);
+  }
+  const html = renderIndex("/quay-ai-digest", records);
+  expect(html).toContain("10 published records");
+  expect(html).toContain("/quay-ai-digest/items/");
+  expect(html).not.toContain("<script>alert");
+  expect(html).toContain("https://arxiv.org/abs/2611.08472v1");
+  expect(html).toContain("https://github.com/ggml-org/llama.cpp/releases/tag/b12202");
+});
+
 function candidate(url: string, title: string): SourceCandidate {
   return {
     origin: "live",

@@ -11,7 +11,7 @@ The editor and the database stay on this machine. A separate static reading site
 - Node.js 22.13 or newer. This desk was verified on Node.js 22.23.4. It uses `node:sqlite`, which prints an experimental warning. That warning is expected.
 - npm.
 
-No API token is required. The GitHub adapter is unauthenticated. Do not add a GitHub, Hugging Face, or OpenAlex credential.
+No API token is required for the default calls. The GitHub and Hugging Face calls are unauthenticated. Do not commit a credential. If OpenAlex refuses the anonymous budget, set `QUAY_OPENALEX_API_KEY` in the local environment only. That variable is not read from the repository.
 
 ## Run
 
@@ -45,23 +45,37 @@ The command-line review tools read the database directly and do not need the bea
 ```bash
 npm run ingest -- arxiv
 npm run ingest -- github-releases
+npm run ingest -- openalex-works
+npm run ingest -- huggingface-hub
+npm run ingest -- huggingface-blog
+npm run ingest -- openai-news
+npm run ingest -- deepmind-blog
 npm run ingest:daily
+```
+
+Use a private database when trying a new adapter. Nothing in these commands publishes, and they do not edit `site/published.json`:
+
+```bash
+QUAY_DB_PATH=/tmp/quay-drafts.sqlite npm run ingest -- huggingface-hub
 ```
 
 `ingest:daily` runs every enabled adapter and exits 1 if one of them errors. It does not publish. Add it to your own crontab if you want a daily run. This repository does not install cron and does not run ingest in GitHub Actions.
 
-Enabled adapters, checked 8 November 2026:
+Enabled adapters. Permission to call the newly enabled sources was accepted by the operator on 8 November 2026. Quay does not claim that permission was independently verified. AlphaSignal is still not a source.
 
 | Id | Call | Repeat bound |
 | --- | --- | --- |
 | `arxiv` | Four HTTPS GETs to `export.arxiv.org` for `cs.AI`, `cs.CL`, `cs.CV`, and `cs.LG`, at most 5 results each | Each category URL is skipped for 20 hours unless `--force` |
 | `github-releases` | Releases for `pytorch/pytorch`, `vllm-project/vllm`, `ggml-org/llama.cpp`, `huggingface/transformers`, and `microsoft/onnxruntime`, 5 per repo, no token | Each repository URL is skipped for 20 hours unless `--force` |
+| `openalex-works` | One GET to `api.openalex.org/works`, five recent Artificial Intelligence articles or preprints, no abstract | That URL is skipped for 20 hours unless `--force` |
+| `huggingface-hub` | One GET to `huggingface.co/api/models`, five public models, no token and no model card | That URL is skipped for 20 hours unless `--force` |
+| `huggingface-blog` | `https://huggingface.co/blog/feed.xml`, five items, title and pubDate only | That URL is skipped for 20 hours unless `--force` |
+| `openai-news` | `https://openai.com/news/rss.xml`, five items, title and pubDate only | That URL is skipped for 20 hours unless `--force` |
+| `deepmind-blog` | `https://deepmind.google/blog/rss.xml`, five items, title and pubDate only | That URL is skipped for 20 hours unless `--force` |
 
-Both wait at least 4 seconds between requests, send a stored ETag, do not follow redirects, and do not retry `403` or `429`. A 429 also stops the remaining URLs in that adapter. The same arXiv paper id and version from two categories is one draft, with topics unioned. A new version stays a second draft. GitHub `published_at` is the publication time. Another timestamp is not stored as that date.
+Each adapter waits at least 4 seconds between its own requests, sends a stored ETag, does not follow redirects, and does not retry `401`, `402`, `403`, or `429`. A refusal stops that adapter. The same arXiv paper id and version from two categories is one draft, with topics unioned. A new version stays a second draft. GitHub `published_at` is the publication time. Another timestamp is not stored as that date. Hub `lastModified` and OpenAlex `updated_date` are catalog times, not publication dates.
 
-Disabled adapters are listed on the Sources page and in [docs/source-permissions.md](docs/source-permissions.md): OpenAlex, the Hugging Face Hub model API, the Hugging Face blog, OpenAI news, Google DeepMind, and AlphaSignal. They make no network call. A public RSS feed is not permission to store it. If a live call fails, the run is stored as an error and already published rows are left as they are.
-
-News and model records have no live adapter. File them by hand in the editor with a primary `http` or `https` citation. Quay does not fetch the page body.
+Fetched rows stay drafts. Hand filing is still available for a source that is not in this list. Quay does not fetch article bodies.
 
 ## Review
 
@@ -158,16 +172,16 @@ Implemented:
 - Browser-local bookmarks, labeled as local.
 - Provenance, primary citations, and separate fact and interpretation sections.
 - arXiv category ingestion for cs.AI, cs.CL, cs.CV, and cs.LG, and GitHub release ingestion for five allowlisted repositories, with canonical URL and stable-id deduplication, topic union, idempotent re-ingest, conditional GET, and title-similarity flags that do not auto-merge.
+- Metadata adapters for OpenAlex works, the Hugging Face Hub model list, and the Hugging Face, OpenAI, and DeepMind official feeds. They store identifiers and short mechanical summaries, not article bodies, and they create drafts only.
 - A local `ingest:daily` command. It is not installed as cron and it is not a GitHub Actions job.
 - A static Pages export from a reviewed JSON snapshot, with client-side search, filters, bookmarks, and digest download.
 - Mandatory draft review. Public log and Markdown/HTML digest include published rows only.
 - Local editor page and CLI. Unauthenticated mutations return `401`.
-- Disabled adapters documented, with no network call.
 
 Not implemented, on purpose:
 
 - Email, newsletter delivery, signup, accounts, and analytics.
-- A live adapter for news pages, model cards, OpenAlex, the Hugging Face Hub, the Hugging Face blog, OpenAI news, or the DeepMind blog.
+- AlphaSignal scraping, paywall bypass, or a copy of model cards and article bodies.
 - An automated ingest workflow. The daily command runs only when someone starts it, or when they add their own crontab.
 - Seeded demo stories in the public database. Tests build fixture rows in temporary files. Those rows are labeled `origin=fixture` and cannot be published.
 - Ranking, votes, subscriber counts, or a claim that the log is complete.

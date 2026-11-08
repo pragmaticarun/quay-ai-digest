@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { arxivCategoryUrl, fetchArxiv, mergeByStableId, parseArxivAtom } from "@/lib/adapters/arxiv";
 import { fetchGithubReleases, parseGithubReleases } from "@/lib/adapters/github";
-import { evaluateCooldown } from "@/lib/adapters/registry";
+import { parseHuggingFaceModels } from "@/lib/adapters/huggingface-hub";
+import { parseOpenAlexWorks } from "@/lib/adapters/openalex";
+import { evaluateCooldown, adapters } from "@/lib/adapters/registry";
+import { HUGGINGFACE_BLOG, parseRssFeed } from "@/lib/adapters/rss";
+import { escapeHtml } from "@/lib/escape";
 import { openDatabase } from "@/lib/db";
-import { getEntry, ingestCandidate, markAdapterSuccess } from "@/lib/entries";
+import { getEntry, ingestCandidate, listPublic, markAdapterSuccess } from "@/lib/entries";
 import { runAdapter } from "@/lib/ingest";
 import { putRequestCache } from "@/lib/request-cache";
 import type { SourceCandidate } from "@/lib/types";
@@ -104,32 +108,18 @@ describe("source parsers", () => {
 });
 
 describe("ingest guards", () => {
-  it("does not call the network for a disabled adapter", async () => {
-    const db = openDatabase(":memory:");
-    let called = false;
-    const run = await runAdapter(db, "openalex-works", {
-      fetchImpl: async () => {
-        called = true;
-        throw new Error("should not fetch");
-      },
-    });
-    expect(called).toBe(false);
-    expect(run.outcome).toBe("skipped");
-    expect(run.message).toMatch(/written consent|conflict/i);
-  });
-
-  it("does not call disabled Hugging Face, OpenAI, or DeepMind adapters", async () => {
-    const db = openDatabase(":memory:");
-    let called = false;
-    const fetchImpl = async () => {
-      called = true;
-      throw new Error("should not fetch");
-    };
-    for (const id of ["huggingface-hub", "huggingface-blog", "openai-news", "deepmind-blog"]) {
-      const run = await runAdapter(db, id, { fetchImpl });
-      expect(run.outcome).toBe("skipped");
-    }
-    expect(called).toBe(false);
+  it("keeps every registered adapter enabled and has no AlphaSignal adapter", () => {
+    expect(adapters.filter((adapter) => !adapter.enabled)).toEqual([]);
+    expect(adapters.map((adapter) => adapter.id)).toEqual([
+      "arxiv",
+      "github-releases",
+      "openalex-works",
+      "huggingface-hub",
+      "huggingface-blog",
+      "openai-news",
+      "deepmind-blog",
+    ]);
+    expect(adapters.some((adapter) => /alphasignal/i.test(adapter.id + adapter.title))).toBe(false);
   });
 
   it("stops later GitHub repositories after HTTP 429 and does not mark success", async () => {
@@ -228,6 +218,159 @@ describe("ingest guards", () => {
     );
     expect(version.kind).toBe("created");
     expect(version.id).not.toBe(again.id);
+  });
+
+  it("parses a feed item without storing the description and without using a decoy date", () => {
+    const xml = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title><![CDATA[Fixture <script>alert(1)</script> &amp; more]]></title>
+    <link>https://huggingface.co/blog/fixture-post</link>
+    <guid>https://huggingface.co/blog/fixture-post</guid>
+    <pubDate>Fri, 06 Nov 2026 14:00:48 GMT</pubDate>
+    <updated>2020-01-01T00:00:00Z</updated>
+    <description>SECRET DESCRIPTION BODY</description>
+  </item>
+  <item>
+    <title>Fixture duplicate</title>
+    <link>https://huggingface.co/blog/fixture-post</link>
+    <guid>https://huggingface.co/blog/fixture-post</guid>
+    <pubDate>Fri, 06 Nov 2026 14:00:48 GMT</pubDate>
+  </item>
+  <item>
+    <title>Off host</title>
+    <link>https://example.com/blog/nope</link>
+    <pubDate>Fri, 06 Nov 2026 14:00:48 GMT</pubDate>
+  </item>
+</channel></rss>`;
+    const parsed = parseRssFeed(xml, HUGGINGFACE_BLOG);
+    expect(parsed.candidates).toHaveLength(1);
+    expect(parsed.skipped).toBe(2);
+    const [candidate] = parsed.candidates;
+    expect(candidate?.publishedAt).toBe("2026-11-06T14:00:48.000Z");
+    expect(candidate?.updatedAt).toBeNull();
+    expect(candidate?.title).not.toMatch(/<script/i);
+    expect(escapeHtml(candidate?.title ?? "")).not.toContain("<script");
+    expect(JSON.stringify(candidate)).not.toContain("SECRET DESCRIPTION");
+    expect(JSON.stringify(candidate)).not.toContain("2020-01-01");
+  });
+
+  it("refuses a feed doctype", () => {
+    expect(() => parseRssFeed("<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><rss></rss>", HUGGINGFACE_BLOG)).toThrow(/doctype/i);
+  });
+
+  it("stores Hub lastModified as a catalog update and not as a publication date", () => {
+    const body = JSON.stringify([
+      {
+        id: "fixture-org/fixture-model",
+        private: false,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        lastModified: "2026-11-08T13:07:19.000Z",
+        pipeline_tag: "text-generation",
+        library_name: "transformers",
+        cardData: "SECRET MODEL CARD",
+        readme: "SECRET README",
+      },
+      { id: "fixture-org/private-model", private: true, lastModified: "2026-11-08T00:00:00.000Z" },
+      { id: "../escape", private: false, lastModified: "2026-11-08T00:00:00.000Z" },
+    ]);
+    const parsed = parseHuggingFaceModels(body, "https://huggingface.co/api/models?limit=5");
+    expect(parsed.candidates).toHaveLength(1);
+    const [candidate] = parsed.candidates;
+    expect(candidate?.publishedAt).toBeNull();
+    expect(candidate?.datePrecision).toBe("unknown");
+    expect(candidate?.updatedAt).toBe("2026-11-08T13:07:19.000Z");
+    expect(candidate?.stableId).toBe("hf-model:fixture-org/fixture-model");
+    expect(JSON.stringify(candidate)).not.toContain("SECRET MODEL CARD");
+    expect(JSON.stringify(candidate)).not.toContain("SECRET README");
+    expect(candidate?.factSummary).toContain("not stored as publishedAt");
+  });
+
+  it("keeps OpenAlex publication_date distinct from the catalog update and drops the abstract", () => {
+    const body = JSON.stringify({
+      results: [
+        {
+          id: "https://openalex.org/W1",
+          display_name: "Fixture <script>alert(1)</script> paper",
+          publication_date: "2026-11-01",
+          updated_date: "2026-11-08T10:00:00.000Z",
+          type: "preprint",
+          doi: "https://doi.org/10.1000/fixture",
+          abstract_inverted_index: { SECRET: [0], ABSTRACT: [1] },
+          authorships: [{ author: { display_name: "A Person" } }],
+          primary_location: { source: { display_name: "Fixture venue" }, landing_page_url: "https://example.com/secret-landing", pdf_url: "https://example.com/secret.pdf" },
+        },
+        { id: "https://openalex.org/W1", display_name: "duplicate", publication_date: "2026-11-01", type: "article" },
+        { id: "https://evil.example/W9", display_name: "wrong host", publication_date: "2026-11-01", type: "article" },
+      ],
+    });
+    const parsed = parseOpenAlexWorks(body, "https://api.openalex.org/works");
+    expect(parsed.candidates).toHaveLength(1);
+    const [candidate] = parsed.candidates;
+    expect(candidate?.publishedAt).toBe("2026-11-01T00:00:00.000Z");
+    expect(candidate?.datePrecision).toBe("date");
+    expect(candidate?.updatedAt).toBe("2026-11-08T10:00:00.000Z");
+    expect(candidate?.canonicalUrl).toBe("https://doi.org/10.1000/fixture");
+    expect(candidate?.title).not.toMatch(/<script/i);
+    expect(escapeHtml(candidate?.title ?? "")).not.toContain("<script");
+    const encoded = JSON.stringify(candidate);
+    expect(encoded).not.toContain("SECRET");
+    expect(encoded).not.toContain("secret-landing");
+    expect(encoded).not.toContain("secret.pdf");
+    expect(candidate?.citations.some((citation) => citation.role === "primary" && citation.url === "https://doi.org/10.1000/fixture")).toBe(true);
+  });
+
+  it("stores a new feed draft and does not publish it", async () => {
+    const db = openDatabase(":memory:");
+    const run = await runAdapter(db, "openai-news", {
+      now: "2026-11-08T12:00:00.000Z",
+      sleepImpl: async () => undefined,
+      fetchImpl: async () =>
+        new Response(
+          `<?xml version="1.0"?><rss><channel><item><title>Fixture news</title><link>https://openai.com/index/fixture</link><pubDate>Fri, 06 Nov 2026 08:00:00 GMT</pubDate><description>SECRET DESCRIPTION</description></item></channel></rss>`,
+          { status: 200 },
+        ),
+    });
+    expect(run.outcome).toBe("ok");
+    expect(run.createdCount).toBe(1);
+    expect(listPublic(db)).toEqual([]);
+    const row = db.prepare("SELECT status, origin FROM entries").get() as { status: string; origin: string };
+    expect(row).toEqual({ status: "draft", origin: "live" });
+  });
+
+  it("stops a feed adapter on HTTP 429 and does not mark success", async () => {
+    const db = openDatabase(":memory:");
+    const run = await runAdapter(db, "deepmind-blog", {
+      now: "2026-11-08T12:00:00.000Z",
+      sleepImpl: async () => undefined,
+      fetchImpl: async () => new Response("slow", { status: 429, headers: { "retry-after": "30" } }),
+    });
+    expect(run.outcome).toBe("error");
+    expect(run.message).toMatch(/429/);
+    expect(run.createdCount).toBe(0);
+  });
+
+  it("treats a feed 304 as not-modified", async () => {
+    const db = openDatabase(":memory:");
+    putRequestCache(db, "https://huggingface.co/blog/feed.xml", {
+      etag: "W/\"feed\"",
+      lastModified: null,
+      fetchedAt: "2026-11-07T00:00:00.000Z",
+      status: "ok",
+    });
+    let sawValidator = false;
+    const run = await runAdapter(db, "huggingface-blog", {
+      now: "2026-11-08T12:00:00.000Z",
+      force: true,
+      sleepImpl: async () => undefined,
+      fetchImpl: async (_url, init) => {
+        sawValidator = new Headers(init?.headers).get("if-none-match") === "W/\"feed\"";
+        return { status: 304, headers: new Headers({ etag: "W/\"feed\"" }), arrayBuffer: async () => new ArrayBuffer(0) } as Response;
+      },
+    });
+    expect(sawValidator).toBe(true);
+    expect(run.outcome).toBe("ok");
+    expect(run.createdCount).toBe(0);
   });
 
   it("refuses an unforced repeat inside the cache window", () => {
