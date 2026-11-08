@@ -1,0 +1,29 @@
+{
+  "records": [
+    {
+      "id": "reviewed-fixture",
+      "type": "paper",
+      "title": "STATIC FIXTURE reviewed record",
+      "topics": ["evaluation"],
+      "publisher": "Fixture press",
+      "authors": ["A Person"],
+      "canonicalUrl": "https://example.com/papers/static-fixture",
+      "stableId": "manual:static-fixture",
+      "versionLabel": null,
+      "publishedAt": "2026-11-01T00:00:00.000Z",
+      "updatedAt": null,
+      "fetchedAt": "2026-11-08T00:00:00.000Z",
+      "reviewedAt": "2026-11-08T01:00:00.000Z",
+      "datePrecision": "datetime",
+      "factSummary": "This static fixture states a title and a primary URL so the reading site can be tested without a database.",
+      "interpretation": "This interpretation exists only in the test fixture.",
+      "engineeringRelevance": "",
+      "caveats": "",
+      "licenseNote": "Fixture citation.",
+      "citations": [{ "label": "Primary", "url": "https://example.com/papers/static-fixture", "role": "primary" }],
+      "sourceDrift": false,
+      "adapterId": "manual",
+      "sourceLabel": null
+    }
+  ]
+}
