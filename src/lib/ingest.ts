@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { fetchArxiv } from "@/lib/adapters/arxiv";
 import { fetchGithubReleases } from "@/lib/adapters/github";
+import { fetchHuggingFaceModels } from "@/lib/adapters/huggingface-hub";
+import { fetchOpenAlexWorks } from "@/lib/adapters/openalex";
+import { fetchDeepMindBlog, fetchHuggingFaceBlog, fetchOpenAiNews } from "@/lib/adapters/rss";
 import type { FetchLike } from "@/lib/adapters/http";
 import { adapters, evaluateCooldown, getAdapter } from "@/lib/adapters/registry";
 import {
@@ -26,6 +29,16 @@ export function withIngestLock<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const fetchers = {
+  arxiv: fetchArxiv,
+  "github-releases": fetchGithubReleases,
+  "openalex-works": fetchOpenAlexWorks,
+  "huggingface-hub": fetchHuggingFaceModels,
+  "huggingface-blog": fetchHuggingFaceBlog,
+  "openai-news": fetchOpenAiNews,
+  "deepmind-blog": fetchDeepMindBlog,
+} as const;
 
 export async function runEnabledAdapters(
   db: DatabaseSync,
@@ -89,12 +102,8 @@ async function runAdapterUnlocked(
   const sleep = options.sleepImpl ?? realSleep;
   try {
     const fetchOptions = { now, force: options.force === true };
-    const fetched =
-      adapterId === "arxiv"
-        ? await fetchArxiv(db, fetchImpl, sleep, fetchOptions)
-        : adapterId === "github-releases"
-          ? await fetchGithubReleases(db, fetchImpl, sleep, fetchOptions)
-          : null;
+    const fetchFor = fetchers[adapterId as keyof typeof fetchers];
+    const fetched = fetchFor ? await fetchFor(db, fetchImpl, sleep, fetchOptions) : null;
     if (!fetched) {
       return finish({ outcome: "skipped", message: "This adapter has no fetch implementation." });
     }
